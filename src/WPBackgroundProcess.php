@@ -78,12 +78,18 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @return array<string|mixed>|WP_Error The response or WP_Error on failure.
 	 */
 	public function dispatch() {
+		$this->log( __METHOD__ . ' start.' );
+
 		if ( $this->is_processing() ) {
+			$this->log( __METHOD__ . ' is_processing.' );
+
 			return new WP_Error( 'already_processing', 'Already processing.' );
 		}
 
 		// Schedule the cron healthcheck.
 		$this->schedule_event();
+
+		$this->log( __METHOD__ . ' end.' );
 
 		// Perform remote post.
 		return parent::dispatch();
@@ -317,15 +323,21 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @return void
 	 */
 	public function maybe_handle(): void {
+		$this->log( __METHOD__ . ' start.' );
+
 		// Don't lock up other requests while processing.
 		session_write_close();
 
 		if ( $this->is_processing() ) {
+			$this->log( __METHOD__ . ' is_processing.' );
+
 			// Background process already running.
 			wp_die();
 		}
 
 		if ( $this->is_cancelled() ) {
+			$this->log( __METHOD__ . ' is_cancelled.' );
+
 			$this->clear_scheduled_event();
 			$this->delete_all();
 
@@ -333,6 +345,8 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 		}
 
 		if ( $this->is_paused() ) {
+			$this->log( __METHOD__ . ' is_paused.' );
+
 			$this->clear_scheduled_event();
 			$this->paused();
 
@@ -340,18 +354,24 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 		}
 
 		if ( $this->is_queue_empty() ) {
+			$this->log( __METHOD__ . ' is_queue_empty.' );
+
 			// No data to process.
 			wp_die();
 		}
 
 		check_ajax_referer( $this->identifier, 'nonce' );
+		$this->log( __METHOD__ . ' nonce is correct.' );
 
 		try {
+			$this->log( __METHOD__ . ' handle start.' );
 			$this->handle();
+			$this->log( __METHOD__ . ' handle end.' );
 		} catch ( Exception $exception ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( $exception->getMessage() );
+			$this->log( $exception->getMessage() );
 		}
+
+		$this->log( __METHOD__ . ' end.' );
 
 		wp_die();
 	}
@@ -430,6 +450,8 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 			$batch = array_shift( $batches );
 		}
 
+		$this->log( __METHOD__ . ' ' . wp_json_encode( $batch ) );
+
 		return (object) $batch;
 	}
 
@@ -481,6 +503,8 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 			}
 		}
 
+		$this->log( __METHOD__ . ' ' . wp_json_encode( $batches ) );
+
 		return $batches;
 	}
 
@@ -497,10 +521,13 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 
 		$batch = $this->get_batch();
 
+		$this->log( __METHOD__ . ' Before loop.' );
 		while ( true ) {
 			$value = array_shift( $batch->data );
 
+			$this->log( __METHOD__ . ' Value before ' . wp_json_encode( $value ) );
 			$value = $this->task( $value );
+			$this->log( __METHOD__ . ' Value after ' . wp_json_encode( $value ) );
 
 			if ( false !== $value ) {
 				array_unshift( $batch->data, $value );
@@ -526,13 +553,18 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 				break;
 			}
 		}
+		$this->log( __METHOD__ . ' After loop.' );
 
 		$this->unlock_process();
 
 		// Complete process or start next batch.
 		if ( $this->is_queue_empty() ) {
+			$this->log( __METHOD__ . ' complete().' );
+
 			$this->complete();
 		} else {
+			$this->log( __METHOD__ . ' dispatch().' );
+
 			$this->dispatch();
 		}
 
@@ -633,7 +665,7 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @return array<string, mixed>
 	 */
 	public function schedule_cron_healthcheck( array $schedules ): array {
-		$interval = apply_filters( $this->cron_interval_identifier, 5 );
+		$interval = apply_filters( $this->cron_interval_identifier, 2 );
 
 		if ( property_exists( $this, 'cron_interval' ) ) {
 			$interval = apply_filters( $this->cron_interval_identifier, $this->cron_interval );
@@ -652,6 +684,8 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 			'display'  => $display,
 		);
 
+		$this->log( __METHOD__ . " Interval $interval." );
+
 		return $schedules;
 	}
 
@@ -665,18 +699,26 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @throws Exception Exception.
 	 */
 	public function handle_cron_healthcheck(): void {
+		$this->log( __METHOD__ . ' start.' );
+
 		if ( $this->is_processing() ) {
+			$this->log( __METHOD__ . ' is_processing.' );
+
 			// Background process already running.
 			exit;
 		}
 
 		if ( $this->is_queue_empty() ) {
+			$this->log( __METHOD__ . ' is_queue_empty.' );
+
 			// No data to process.
 			$this->clear_scheduled_event();
 			exit;
 		}
 
 		$this->dispatch();
+
+		$this->log( __METHOD__ . ' end.' );
 	}
 
 	/**
@@ -685,11 +727,17 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @return void
 	 */
 	protected function schedule_event(): void {
+		$this->log( __METHOD__ . ' start.' );
+
 		$timestamp = wp_next_scheduled( $this->cron_hook_identifier );
 
-		if ( false !== $timestamp ) {
+		if ( false === $timestamp ) {
 			wp_schedule_event( time(), $this->cron_interval_identifier, $this->cron_hook_identifier );
+
+			$this->log( __METHOD__ . ' wp_schedule_event.' );
 		}
+
+		$this->log( __METHOD__ . ' end.' );
 	}
 
 	/**
@@ -698,11 +746,17 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 	 * @return void
 	 */
 	protected function clear_scheduled_event(): void {
+		$this->log( __METHOD__ . ' start.' );
+
 		$timestamp = wp_next_scheduled( $this->cron_hook_identifier );
 
 		if ( false !== $timestamp ) {
 			wp_unschedule_event( $timestamp, $this->cron_hook_identifier );
+
+			$this->log( __METHOD__ . ' wp_unschedule_event.' );
 		}
+
+		$this->log( __METHOD__ . ' end.' );
 	}
 
 	/**
