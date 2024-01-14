@@ -78,7 +78,11 @@ abstract class WPAsyncRequest {
 
 		$result = wp_remote_post( esc_url_raw( $url ), $args );
 		if ( is_wp_error( $result ) ) {
-			$this->log( __METHOD__ . ' error: ' . $result->get_error_message() );
+			$context = array(
+				'error' => $result->get_error_message(),
+			);
+
+			$this->log( __METHOD__ . ' error.', $context );
 		} else {
 			$this->log( __METHOD__ . ' success.' );
 		}
@@ -169,7 +173,6 @@ abstract class WPAsyncRequest {
 		session_write_close();
 
 		check_ajax_referer( $this->identifier, 'nonce' );
-		$this->log( __METHOD__ . ' nonce is correct.' );
 
 		try {
 			$this->log( __METHOD__ . ' handle start.' );
@@ -187,21 +190,30 @@ abstract class WPAsyncRequest {
 	/**
 	 * Log error.
 	 *
-	 * @param string $message Message.
+	 * @param string       $message Message.
+	 * @param array<mixed> $context Context.
 	 *
 	 * @return void
 	 */
-	protected function log( string $message ): void {
+	protected function log( string $message, array $context = array() ): void {
 		static $request_id = null;
 
-		if ( defined( 'WP_BACKGROUND_PROCESSING_DEBUG' ) && true === WP_BACKGROUND_PROCESSING_DEBUG ) {
-			if ( null === $request_id ) {
-				$request_id = md5( microtime() . wp_rand() );
-			}
-
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( "$message $request_id" . PHP_EOL, 3, WP_CONTENT_DIR . '/debug.log' );
+		if ( ! defined( 'WP_BACKGROUND_PROCESSING_DEBUG' ) || false === WP_BACKGROUND_PROCESSING_DEBUG ) {
+			return;
 		}
+
+		if ( null === $request_id ) {
+			$request_id = substr( md5( microtime() . wp_rand() ), - 8 );
+		}
+
+		$message = gmdate( '[d-M-Y H:i:s e]' ) . ' ' . $message . ' ' . $request_id;
+
+		if ( count( $context ) > 0 ) {
+			$message .= "\t " . wp_json_encode( $context );
+		}
+
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		error_log( $message . PHP_EOL, 3, WP_CONTENT_DIR . '/debug.log' );
 	}
 
 	/**
