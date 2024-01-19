@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "03bf003cb4a86837b262b76ad4397d6d",
+    "content-hash": "b4a2cd6d781c8ecba23acb1c36445358",
     "packages": [],
     "packages-dev": [
         {
@@ -131,16 +131,16 @@
         },
         {
             "name": "php-stubs/woocommerce-stubs",
-            "version": "v8.5.0",
+            "version": "v8.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-stubs/woocommerce-stubs.git",
-                "reference": "cf4b784137411162e4110912b94335678f4689b9"
+                "reference": "d2ea3610bab1e51b81c745bfdc00eeae3da8454d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-stubs/woocommerce-stubs/zipball/cf4b784137411162e4110912b94335678f4689b9",
-                "reference": "cf4b784137411162e4110912b94335678f4689b9",
+                "url": "https://api.github.com/repos/php-stubs/woocommerce-stubs/zipball/d2ea3610bab1e51b81c745bfdc00eeae3da8454d",
+                "reference": "d2ea3610bab1e51b81c745bfdc00eeae3da8454d",
                 "shasum": ""
             },
             "require": {
@@ -169,9 +169,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-stubs/woocommerce-stubs/issues",
-                "source": "https://github.com/php-stubs/woocommerce-stubs/tree/v8.5.0"
+                "source": "https://github.com/php-stubs/woocommerce-stubs/tree/v8.5.1"
             },
-            "time": "2024-01-09T10:44:07+00:00"
+            "time": "2024-01-15T19:51:26+00:00"
         },
         {
             "name": "php-stubs/wordpress-stubs",
@@ -432,16 +432,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.55",
+            "version": "1.10.56",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "9a88f9d18ddf4cf54c922fbeac16c4cb164c5949"
+                "reference": "27816a01aea996191ee14d010f325434c0ee76fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9a88f9d18ddf4cf54c922fbeac16c4cb164c5949",
-                "reference": "9a88f9d18ddf4cf54c922fbeac16c4cb164c5949",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/27816a01aea996191ee14d010f325434c0ee76fa",
+                "reference": "27816a01aea996191ee14d010f325434c0ee76fa",
                 "shasum": ""
             },
             "require": {
@@ -490,7 +490,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-08T12:32:40+00:00"
+            "time": "2024-01-15T10:43:00+00:00"
         },
         {
             "name": "phpstan/phpstan-strict-rules",
