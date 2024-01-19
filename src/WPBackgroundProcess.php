@@ -459,7 +459,7 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 		$batches = $this->get_batches( 1 );
 
 		if ( 0 === count( $batches ) ) {
-			$batch = array(
+			$batch = (object) array(
 				'key'  => '',
 				'data' => array(),
 			);
@@ -467,9 +467,14 @@ abstract class WPBackgroundProcess extends WPAsyncRequest {
 			$batch = array_shift( $batches );
 		}
 
-		$this->log( __METHOD__, $batch );
+		$context = array(
+			'key'  => $batch->key,
+			'data' => $batch->data,
+		);
 
-		return (object) $batch;
+		$this->log( __METHOD__, $context );
+
+		return $batch;
 	}
 
 	/**
